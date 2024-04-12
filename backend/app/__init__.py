@@ -7,15 +7,15 @@ from flask import render_template_string
 from flask_cors import CORS
 
 def create_app():
-    app = Flask(__name__)
-    app.config.from_object(Config)
-    app.secret_key = app.config['SECRET_KEY']
+    application = Flask(__name__)
+    application.config.from_object(Config)
+    application.secret_key = application.config['SECRET_KEY']
     
     
-    Session(app)
+    Session(application)
     # CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
-    CORS(app, supports_credentials=True)
-    @app.route("/")
+    CORS(application, supports_credentials=True)
+    @application.route("/")
     def home():
         return render_template_string("""
         <!DOCTYPE html>
@@ -33,6 +33,6 @@ def create_app():
         """)
     
     
-    app.register_blueprint(nylas_blueprint, url_prefix='/nylas')
+    application.register_blueprint(nylas_blueprint, url_prefix='/nylas')
 
-    return app
+    return application
