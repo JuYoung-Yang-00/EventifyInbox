@@ -1,0 +1,31 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.9
+    commands:
+      - echo Installing Python 3.9 and virtual environment...
+      - python -m venv venv
+      - . venv/bin/activate
+  pre_build:
+    commands:
+      - echo Installing dependencies...
+      - pip install -r requirements.txt
+  build:
+    commands:
+      - echo Running tests...
+      - echo Build phase...
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - eb deploy EventifyInbox-env --staged
+artifacts:
+  files:
+    - '**/*'
+  base-directory: 'backend'
+  discard-paths: no
+
+cache:
+  paths:
+    - 'venv/**/*'
