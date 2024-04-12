@@ -9,14 +9,13 @@ phases:
       - cd backend
       - python -m venv venv
       - . venv/bin/activate
-      - ls
+      - pip install awsebcli --upgrade
   pre_build:
     commands:
       - echo Installing dependencies...
       - pip install -r requirements.txt
   build:
     commands:
-      - echo Running tests...
       - echo Build phase...
   post_build:
     commands:
