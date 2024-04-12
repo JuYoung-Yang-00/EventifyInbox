@@ -6,13 +6,13 @@ phases:
       python: 3.9
     commands:
       - echo Installing Python 3.9 and virtual environment...
+      - cd backend
       - python -m venv venv
       - . venv/bin/activate
       - ls
   pre_build:
     commands:
       - echo Installing dependencies...
-      - cd backend
       - pip install -r requirements.txt
   build:
     commands:
