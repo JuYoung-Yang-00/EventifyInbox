@@ -6,6 +6,7 @@ phases:
       python: 3.9
     commands:
       - echo Installing Python 3.9 and virtual environment...
+      - cd backend
       - python -m venv venv
       - . venv/bin/activate
   pre_build:
@@ -14,12 +15,10 @@ phases:
       - pip install -r requirements.txt
   build:
     commands:
-      - echo Running tests...
       - echo Build phase...
   post_build:
     commands:
       - echo Build completed on `date`
-      - eb deploy EventifyInbox-env --staged
 artifacts:
   files:
     - '**/*'
