@@ -9,7 +9,6 @@ phases:
       - cd backend
       - python -m venv venv
       - . venv/bin/activate
-      - pip install awsebcli --upgrade
   pre_build:
     commands:
       - echo Installing dependencies...
@@ -20,7 +19,6 @@ phases:
   post_build:
     commands:
       - echo Build completed on `date`
-      - eb deploy EventifyInbox-env --staged
 artifacts:
   files:
     - '**/*'
