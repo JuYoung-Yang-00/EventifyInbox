@@ -13,13 +13,13 @@ body, html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.9); 
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 0 40px;
 }
 
 .header-title {
   margin-right: auto;
+  font-size: 25px;
+  color: white;
 }
 
 .header-nav {
@@ -32,18 +32,21 @@ body, html {
 }
 
 .nav-links p {
-  margin: 0 20px;
+  margin: 0 50px;
 }
 
 .nav-link {
   text-decoration: none;
-  color: #09042b;
+  color: white;
   font-size: 18px;
   transition: color 0.3s ease;
 }
 
 .nav-link.active {
   color: #4481be;
+  background-color: white;
+  padding: 15px 30px;
+  border-radius: 15px;
 }
 
 /* HOME */
@@ -218,4 +221,72 @@ body, html {
 .event-content-placeholder {
   text-align: center;
   color: #999;
+}
+
+
+
+
+
+
+
+
+/* PHONE */
+@media screen and (max-width: 420px) {  
+  .header {
+    padding: 2px 20px;
+    background-color: transparent; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0);
+  }
+  .header-title h2{
+    font-size: 16px;
+    color: white;
+  }
+  .nav-links a{
+    font-size: 12px;
+    color: white;
+  }
+  .nav-link.active {
+    background-color: white;
+    color: #4481be;
+    padding: 5px 10px;
+    border-radius: 10px;
+  }
+  
+  /* HOME */
+  .login-content {
+    padding: 20px;
+    height: 70%;
+  }
+  .image-container {
+    flex-direction: column; 
+    gap: 1rem; 
+  }
+  .langchainimg {
+    width: 150px; 
+  }
+  .nylasimg {
+    width: 110px; 
+  }
+  .home-text p {
+    font-size: 14px;
+  }
+  .connect-nylas-button {
+    width: 50%; 
+    font-size: 14px; 
+  }
+  
+  /* EMAIL */
+  .email-container, .calendar-container {
+    flex-direction: column; 
+    margin: 20px; 
+    height: 88vh;
+  }
+  .email-list-container, .upcoming-event-container{
+    margin: 0; 
+    height: 50%; 
+  }
+  .email-content-container, .event-content-container {
+    margin: 0;
+    height: 50%;
+  }
 }
