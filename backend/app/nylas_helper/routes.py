@@ -115,7 +115,7 @@ def nylas_webhook():
 
     data = request.get_json(silent=True)
     if data:
-        # send_notification_email(data) 
+        send_notification_email(data) 
         print("Valid data received:", data)
         return jsonify(success=True), 200
     else:
