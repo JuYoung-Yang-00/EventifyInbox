@@ -7,6 +7,7 @@ import os
 import hashlib
 import hmac
 import json 
+from nylas.models.webhooks import WebhookTriggers
 
 
 nylas_blueprint = Blueprint('nylas', __name__)
@@ -89,32 +90,23 @@ def list_events():
 
   
 # WEBHOOK
+grant_id = os.environ.get("NYLAS_GRANT_ID")
+callback_url = os.environ.get("CALLBACK_URL")
+email = os.environ.get("EMAIL")
 
-# Route to create a webhook
-@nylas_blueprint.route("/create-webhook", methods=['POST'])
-def create_webhook():
-    grant_id = os.getenv("NYLAS_GRANT_ID")
-    callback_url = os.getenv("CALLBACK_URL")
-    email = os.getenv("EMAIL")
+webhook = nylas.webhooks.create(
+  request_body={
+    "trigger_types": [WebhookTriggers.MESSAGE_CREATED],
+    "callback_url": callback_url,
+    "description": "My first webhook",
+    "notification_email_address": email,
+  }
+)
 
-    try:
-        webhook = nylas.webhooks.create(
-            request_body={
-                "trigger_types": ["email.received"],
-                "callback_url": callback_url,
-                "description": "Webhook for receiving new emails",
-                "notification_email_address": email
-            }
-        )
-        return jsonify(webhook), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
+print(webhook) 
 
 # Function to verify Nylas webhook signature
 def verify_nylas_signature(data, signature, webhook_secret):
-    import hashlib
-    import hmac
     expected_signature = hmac.new(webhook_secret.encode(), data, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected_signature, signature)
   
