@@ -89,9 +89,35 @@ def list_events():
 
   
 # WEBHOOK
+
+# Route to create a webhook
+@nylas_blueprint.route("/create-webhook", methods=['POST'])
+def create_webhook():
+    grant_id = os.getenv("NYLAS_GRANT_ID")
+    callback_url = os.getenv("CALLBACK_URL")
+    email = os.getenv("EMAIL")
+
+    try:
+        webhook = nylas.webhooks.create(
+            request_body={
+                "trigger_types": ["email.received"],
+                "callback_url": callback_url,
+                "description": "Webhook for receiving new emails",
+                "notification_email_address": email
+            }
+        )
+        return jsonify(webhook), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Function to verify Nylas webhook signature
 def verify_nylas_signature(data, signature, webhook_secret):
+    import hashlib
+    import hmac
     expected_signature = hmac.new(webhook_secret.encode(), data, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected_signature, signature)
+  
 
 @nylas_blueprint.route("/webhook", methods=['GET', 'POST'])
 def nylas_webhook():
