@@ -98,45 +98,31 @@ def nylas_webhook():
     if request.method == "GET":
         challenge = request.args.get("challenge")
         if challenge:
-            print(" * Nylas connected to the webhook!")
             return Response(challenge, mimetype='text/plain')
 
     webhook_secret = os.getenv('WEBHOOK_SECRET')
     if not webhook_secret:
         return "Webhook secret not configured.", 500
 
-    is_genuine = verify_nylas_signature(
-        data=request.data,
-        signature=request.headers.get("X-Nylas-Signature"),
-        webhook_secret=webhook_secret
-    )
-    if not is_genuine:
+    if not verify_nylas_signature(request.data, request.headers.get("X-Nylas-Signature"), webhook_secret):
         return "Signature verification failed!", 401
 
     data = request.get_json(silent=True)
-    if not data:
+    if data:
+        send_notification_email(data)  # Send notification upon successful data receipt
+        return jsonify(success=True), 200
+    else:
         return "Invalid JSON data", 400
 
-    if 'deltas' in data:
-        for delta in data['deltas']:
-            print("Received delta:", json.dumps(delta, indent=4))  
-            if delta.get('object') == "message" and delta.get('event') == "create":
-                message_id = delta.get('id')
-                print(f"New email ID received: {message_id}")
-
-    return jsonify(success=True), 200
-
-
-
-
-
-
-
-# def create_calendar_event(event_details, access_token):
-#     url = 'https://api.nylas.com/events'
-#     headers = {
-#         'Authorization': f'Bearer {access_token}',
-#         'Content-Type': 'application/json'
-#     }
-#     response = requests.post(url, headers=headers, json=event_details)
-#     return response.json()
+# Function to send an email notification with the webhook data
+def send_notification_email(data):
+    body = {
+        "subject": "New Email Received via Webhook",
+        "body": f"Received new email data: {json.dumps(data)}",  # Include the received data in the email body
+        "to": [{"email": "toolbox.jyy@gmail.com"}]  # Sending to the admin email
+    }
+    try:
+        nylas.messages.send(**body)
+        print("Notification email sent successfully!")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
