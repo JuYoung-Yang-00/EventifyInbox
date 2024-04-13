@@ -90,8 +90,11 @@ def list_events():
   
 # WEBHOOK
 def verify_nylas_signature(data, signature, webhook_secret):
+    if not signature:
+        return False
     expected_signature = hmac.new(webhook_secret.encode(), data, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected_signature, signature)
+
 
 @nylas_blueprint.route("/webhook", methods=['GET', 'POST'])
 def nylas_webhook():
@@ -102,17 +105,26 @@ def nylas_webhook():
 
     webhook_secret = os.getenv('WEBHOOK_SECRET')
     if not webhook_secret:
+        print("Webhook secret not configured.")
         return "Webhook secret not configured.", 500
 
-    if not verify_nylas_signature(request.data, request.headers.get("X-Nylas-Signature"), webhook_secret):
+    signature = request.headers.get('X-Nylas-Signature')
+    if not verify_nylas_signature(request.get_data(as_text=True).encode(), signature, webhook_secret):
+        print("Signature verification failed.")
         return "Signature verification failed!", 401
 
     data = request.get_json(silent=True)
     if data:
         # send_notification_email(data) 
+        print("Valid data received:", data)
         return jsonify(success=True), 200
     else:
+        print("Invalid JSON data.")
         return "Invalid JSON data", 400
+
+
+
+
 
 # Function to send an email notification with the webhook data
 def send_notification_email(data):
