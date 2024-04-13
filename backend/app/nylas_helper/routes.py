@@ -6,6 +6,8 @@ from nylas.models.auth import CodeExchangeRequest
 import os
 import hashlib
 import hmac
+import json 
+
 
 nylas_blueprint = Blueprint('nylas', __name__)
 
@@ -97,14 +99,12 @@ def nylas_webhook():
         challenge = request.args.get("challenge")
         if challenge:
             print(" * Nylas connected to the webhook!")
-            # Ensure the response is plain text and exactly what Nylas expects
             return Response(challenge, mimetype='text/plain')
 
     webhook_secret = os.getenv('WEBHOOK_SECRET')
     if not webhook_secret:
         return "Webhook secret not configured.", 500
 
-    # Use the webhook secret for signature verification
     is_genuine = verify_nylas_signature(
         data=request.data,
         signature=request.headers.get("X-Nylas-Signature"),
@@ -117,9 +117,9 @@ def nylas_webhook():
     if not data:
         return "Invalid JSON data", 400
 
-    # Process the notification
     if 'deltas' in data:
         for delta in data['deltas']:
+            print("Received delta:", json.dumps(delta, indent=4))  
             if delta.get('object') == "message" and delta.get('event') == "create":
                 message_id = delta.get('id')
                 print(f"New email ID received: {message_id}")
