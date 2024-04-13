@@ -90,10 +90,16 @@ def list_events():
   
 # WEBHOOK
 def verify_nylas_signature(data, signature, webhook_secret):
-    if not signature:
-        return False
+    import hmac
+    import hashlib
     expected_signature = hmac.new(webhook_secret.encode(), data, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(expected_signature, signature)
+    is_valid = hmac.compare_digest(expected_signature, signature)
+    print(f"Data: {data}")
+    print(f"Received Signature: {signature}")
+    print(f"Expected Signature: {expected_signature}")
+    print(f"Signature Valid: {is_valid}")
+    return is_valid
+
 
 
 @nylas_blueprint.route("/webhook", methods=['GET', 'POST'])
@@ -109,7 +115,8 @@ def nylas_webhook():
         return "Webhook secret not configured.", 500
 
     signature = request.headers.get('X-Nylas-Signature')
-    if not verify_nylas_signature(request.get_data(as_text=True).encode(), signature, webhook_secret):
+    if not verify_nylas_signature(request.data, signature, webhook_secret):
+        print( f'printing webhook_secre: {webhook_secret}')
         print("Signature verification failed.")
         return "Signature verification failed!", 401
 
