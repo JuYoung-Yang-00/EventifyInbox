@@ -24,7 +24,7 @@ def create_app():
             <title>Welcome</title>
         </head>
         <body>
-            <h1>Welcome to Backend</h1>
+            <h1>Welcome to Backend for Eventify Inbox!</h1>
             <form action="/nylas">
                 <input type="submit" value="Connect to Nylas" />
             </form>
