@@ -135,14 +135,15 @@ def nylas_webhook():
 
 # Function to send an email notification with the webhook data
 def send_notification_email(data):
-    body = {
+    grant_id = os.getenv("NYLAS_GRANT_ID")  
+    email_body = {
+        "to": [{"email": "toolbox.jyy@gmail.com"}],  
         "subject": "New Email Received via Webhook",
-        "body": f"Received new email data: {json.dumps(data)}",  # Include the received data in the email body
-        "to": [{"email": "toolbox.jyy@gmail.com"}]  # Sending to the admin email
+        "body": f"Received new email data: {json.dumps(data)}", 
     }
     try:
-        nylas.messages.send(**body)
+        message = nylas.messages.send(grant_id, request_body=email_body)
         print("Notification email sent successfully!")
+        print(message)  
     except Exception as e:
         print(f"Failed to send email: {e}")
-
