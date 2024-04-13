@@ -13,3 +13,4 @@ class Config:
     NYLAS_CLIENT_ID = os.getenv("NYLAS_CLIENT_ID")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     SECRET_KEY = os.getenv("SECRET_KEY")
+    WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")

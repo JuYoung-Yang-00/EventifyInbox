@@ -3,12 +3,15 @@ from nylas import Client
 from config import Config
 from nylas.models.auth import URLForAuthenticationConfig
 from nylas.models.auth import CodeExchangeRequest
+import hashlib
+import hmac
 
 nylas_blueprint = Blueprint('nylas', __name__)
 
 nylas = Client(
     api_key=Config.NYLAS_API_KEY,
     api_uri=Config.NYLAS_API_URI,
+    webhook_secret=Config.WEBHOOK_SECRET
 )
 
 # AUTH
@@ -84,10 +87,6 @@ def list_events():
 
   
 # WEBHOOK
-import os
-import hashlib
-import hmac
-
 def verify_nylas_signature(data, signature, webhook_secret):
     expected_signature = hmac.new(webhook_secret.encode(), data, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected_signature, signature)
@@ -98,14 +97,13 @@ def nylas_webhook():
         challenge = request.args.get("challenge")
         if challenge:
             print(" * Nylas connected to the webhook!")
-            # Ensure the response is plain text and exactly what Nylas expects
             return Response(challenge, mimetype='text/plain')
 
-    webhook_secret = os.getenv('WEBHOOK_SECRET')
+    webhook_secret = Config.WEBHOOK_SECRET
     if not webhook_secret:
         return "Webhook secret not configured.", 500
 
-    # Use the webhook secret for signature verification
+    # Use webhook secret for signature verification
     is_genuine = verify_nylas_signature(
         data=request.data,
         signature=request.headers.get("X-Nylas-Signature"),
