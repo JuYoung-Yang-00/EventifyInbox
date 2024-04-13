@@ -16,7 +16,7 @@ nylas = Client(
 def login():
   if session.get("grant_id") is None:
     config = URLForAuthenticationConfig({"client_id": Config.NYLAS_CLIENT_ID, 
-        "redirect_uri" : "http://127.0.0.1:5000/nylas/callback"})
+        "redirect_uri" : "https://api.eventifyinbox.com/nylas/callback"})
 
     url = nylas.auth.url_for_oauth2(config)
 
@@ -30,7 +30,7 @@ def authorized():
   if session.get("grant_id") is None:
     code = request.args.get("code")
     exchangeRequest = CodeExchangeRequest({
-      "redirect_uri": "http://127.0.0.1:5000/nylas/callback",
+      "redirect_uri": "https://api.eventifyinbox.com/nylas/callback",
       "code": code,
       "client_id": Config.NYLAS_CLIENT_ID
     })
@@ -62,7 +62,7 @@ def primary_calendar():
       if primary.is_primary is True:
         session["calendar"] = primary.id
         
-      return redirect("http://127.0.0.1:5000/nylas/list-events")
+      return redirect("https://api.eventifyinbox.com/nylas/list-events")
   except Exception as e:
     return f'{e}'   
 
