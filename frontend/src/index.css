@@ -13,12 +13,12 @@ body, html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 40px;
+  padding: 0 50px;
 }
 
 .header-title {
   margin-right: auto;
-  font-size: 25px;
+  font-size: 15px;
   color: white;
 }
 
@@ -38,14 +38,14 @@ body, html {
 .nav-link {
   text-decoration: none;
   color: white;
-  font-size: 18px;
+  font-size: 14px;
   transition: color 0.3s ease;
 }
 
 .nav-link.active {
   color: #4481be;
   background-color: white;
-  padding: 15px 30px;
+  padding: 5px 15px;
   border-radius: 15px;
 }
 
@@ -233,7 +233,7 @@ body, html {
 /* PHONE */
 @media screen and (max-width: 420px) {  
   .header {
-    padding: 2px 20px;
+    padding: 2px 10px;
     background-color: transparent; 
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0);
   }
@@ -245,6 +245,9 @@ body, html {
     font-size: 12px;
     color: white;
   }
+  .nav-links p {
+    margin: 0 20px;
+  }
   .nav-link.active {
     background-color: white;
     color: #4481be;
@@ -255,7 +258,8 @@ body, html {
   /* HOME */
   .login-content {
     padding: 20px;
-    height: 70%;
+    height: 60%;
+    margin-top: -120px;
   }
   .image-container {
     flex-direction: column; 
@@ -273,13 +277,15 @@ body, html {
   .connect-nylas-button {
     width: 50%; 
     font-size: 14px; 
+    padding: 10px;
+    margin-bottom: 30px;
   }
   
-  /* EMAIL */
+  /* EMAIL & CALENDAR*/
   .email-container, .calendar-container {
     flex-direction: column; 
-    margin: 20px; 
-    height: 88vh;
+    margin: 20px 20px; 
+    height: 77vh;
   }
   .email-list-container, .upcoming-event-container{
     margin: 0; 
@@ -289,4 +295,30 @@ body, html {
     margin: 0;
     height: 50%;
   }
+
+  .email-item, .email-content, .email-content-placeholder {
+    padding: 12px;
+  }
+  .email-item h2, .email-content h3 {
+    font-size: 15px; 
+    margin: 0 0 6px 0; 
+  }
+  .email-item p, .email-content p {
+    font-size: 12px; 
+    margin: 2px 0;
+  }
+  .event-item, .event-content, .event-content-placeholder {
+    padding: 12px;
+  }
+  .event-item h2, .event-content h3 {
+    font-size: 15px;
+    margin: 0 0 6px 0;
+  }
+  .event-item p, .event-content p {
+    font-size: 12px;
+    margin: 2px 0;
+  }
+
+  
+
 }

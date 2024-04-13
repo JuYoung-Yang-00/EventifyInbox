@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for, session, jsonify
+from flask import Blueprint, request, redirect, url_for, session, jsonify, Response
 from nylas import Client
 from config import Config
 from nylas.models.auth import URLForAuthenticationConfig
@@ -84,17 +84,60 @@ def list_events():
 
   
 # WEBHOOK
-@nylas_blueprint.route("/webhook", methods=["POST"])
-def nylas_webhook():
-    data = request.json  # Get the JSON data sent by Nylas
+import os
+import hashlib
+import hmac
 
-    # Check if the notification is for a new email
-    if data["deltas"] and data["deltas"][0]["object"] == "message" and data["deltas"][0]["event"] == "create":
-        message_id = data["deltas"][0]["id"]  # Get the message ID
-        # Fetch the message details using Nylas API (assuming you've already handled authentication)
-        message = nylas.messages.get(message_id)
-        # Process the message as needed, e.g., log it, create a calendar event, etc.
-        print(f"New email received: Subject: {message.subject}, From: {message.from_}")
+def verify_nylas_signature(data, signature, webhook_secret):
+    expected_signature = hmac.new(webhook_secret.encode(), data, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected_signature, signature)
+
+@nylas_blueprint.route("/webhook", methods=['GET', 'POST'])
+def nylas_webhook():
+    if request.method == "GET":
+        challenge = request.args.get("challenge")
+        if challenge:
+            print(" * Nylas connected to the webhook!")
+            # Ensure the response is plain text and exactly what Nylas expects
+            return Response(challenge, mimetype='text/plain')
+
+    webhook_secret = os.getenv('WEBHOOK_SECRET')
+    if not webhook_secret:
+        return "Webhook secret not configured.", 500
+
+    # Use the webhook secret for signature verification
+    is_genuine = verify_nylas_signature(
+        data=request.data,
+        signature=request.headers.get("X-Nylas-Signature"),
+        webhook_secret=webhook_secret
+    )
+    if not is_genuine:
+        return "Signature verification failed!", 401
+
+    data = request.get_json(silent=True)
+    if not data:
+        return "Invalid JSON data", 400
+
+    # Process the notification
+    if 'deltas' in data:
+        for delta in data['deltas']:
+            if delta.get('object') == "message" and delta.get('event') == "create":
+                message_id = delta.get('id')
+                print(f"New email ID received: {message_id}")
 
     return jsonify(success=True), 200
 
+
+
+
+
+
+
+# def create_calendar_event(event_details, access_token):
+#     url = 'https://api.nylas.com/events'
+#     headers = {
+#         'Authorization': f'Bearer {access_token}',
+#         'Content-Type': 'application/json'
+#     }
+#     response = requests.post(url, headers=headers, json=event_details)
+#     return response.json()
