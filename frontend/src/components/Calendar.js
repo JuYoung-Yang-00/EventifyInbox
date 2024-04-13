@@ -5,7 +5,7 @@ function Calendar() {
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/nylas/list-events', {
+    fetch('https://api.eventifyinbox.com/nylas/list-events', {
       credentials: 'include',
     })
     .then(response => response.json())

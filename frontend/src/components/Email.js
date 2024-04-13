@@ -5,7 +5,7 @@ function Email() {
   const [selectedEmail, setSelectedEmail] = useState(null);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/nylas/recent-emails', {
+    fetch('https://api.eventifyinbox.com/nylas/recent-emails', {
       credentials: 'include', 
     })
     .then(response => {

@@ -3,16 +3,17 @@ import { NavLink } from 'react-router-dom';
 
 function Header() {
   return (
-    <header>
-      <div>
-        <h2> EventifyInbox</h2>
+    <header className="header">
+      <div className="header-title">
+        <h2>Eventify Inbox</h2>
       </div>
-      <nav>
+      <nav className="header-nav">
         <div className='nav-links'>
           <p>
             <NavLink 
               to="/" 
-              className={({ isActive }) => isActive ? 'active' : undefined}
+              activeClassName="active"
+              className="nav-link"
             >
               Home
             </NavLink>
@@ -20,7 +21,8 @@ function Header() {
           <p>
             <NavLink 
               to="/email" 
-              className={({ isActive }) => isActive ? 'active' : undefined}
+              activeClassName="active"
+              className="nav-link"
             >
               Email
             </NavLink>
@@ -28,7 +30,8 @@ function Header() {
           <p>
             <NavLink 
               to="/calendar" 
-              className={({ isActive }) => isActive ? 'active' : undefined}
+              activeClassName="active"
+              className="nav-link"
             >
               Calendar
             </NavLink>

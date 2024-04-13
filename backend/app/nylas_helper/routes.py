@@ -11,7 +11,7 @@ nylas = Client(
     api_uri=Config.NYLAS_API_URI,
 )
 
-
+# AUTH
 @nylas_blueprint.route("/", methods=["GET"])
 def login():
   if session.get("grant_id") is None:
@@ -22,8 +22,7 @@ def login():
 
     return redirect(url)
   else:
-    return redirect("http://127.0.0.1:3000?nylasConnected=true")
-
+    return redirect("https://eventifyinbox.com?nylasConnected=true")
 
 @nylas_blueprint.route("/callback", methods=["GET"])
 def authorized():
@@ -37,9 +36,10 @@ def authorized():
     exchange = nylas.auth.exchange_code_for_token(exchangeRequest)
     session["grant_id"] = exchange.grant_id
     
-    return redirect("http://127.0.0.1:3000?nylasConnected=true")
+    return redirect("https://eventifyinbox.com?nylasConnected=true")
 
 
+# EMAIL
 @nylas_blueprint.route("/recent-emails", methods=["GET"])
 def recent_emails():
   query_params = {"limit": 20}
@@ -52,6 +52,7 @@ def recent_emails():
     return f'{e}' 
 
 
+# CALENDAR
 @nylas_blueprint.route("/primary-calendar", methods=["GET"])
 def primary_calendar():
   query_params = {"limit": 10}
@@ -65,7 +66,6 @@ def primary_calendar():
       return redirect("https://api.eventifyinbox.com/nylas/list-events")
   except Exception as e:
     return f'{e}'   
-
 
 @nylas_blueprint.route("/list-events", methods=["GET"])
 def list_events():
