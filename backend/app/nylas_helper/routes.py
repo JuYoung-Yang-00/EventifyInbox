@@ -188,8 +188,8 @@ def create_event(grant_id, title, start_time, end_time, description):
     request_body = {
         "title": title,
         "when": {
-            "start_time": int(start_time),
-            "end_time": int(end_time)
+            "start_time": 1648003200,
+            "end_time": 1648006800
         },
         "description": description
     }
