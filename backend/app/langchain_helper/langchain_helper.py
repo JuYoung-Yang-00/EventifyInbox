@@ -1,7 +1,6 @@
 from langchain_openai import OpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-# from langchain_openai import OpenAIEmbeddings
 from config import Config
 import re
 
@@ -34,7 +33,7 @@ def parse_email_data(webhook_data):
 def get_response_from_llm(webhook_data):
     parsed_email_content = parse_email_data(webhook_data)
     
-    llm = OpenAI(model="gpt-3.5-turbo-instruct")
+    llm = OpenAI(model="gpt-3.5-turbo-instruct", openai_api_key=openai_api_key)
     prompt_template = PromptTemplate(
         input_variables=["parsed_email_content"],
         template="""

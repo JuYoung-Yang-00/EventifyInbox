@@ -6,7 +6,7 @@ from nylas.models.auth import CodeExchangeRequest
 import os
 import hashlib
 import hmac
-import langchain_helper as lch
+from app.langchain_helper import langchain_helper
 
 nylas_blueprint = Blueprint('nylas', __name__)
 
@@ -111,7 +111,7 @@ def nylas_webhook():
     #4. Send email notification to user about newly created event
     data = request.get_json(silent=True)
     if data and is_relevant_to_task(data):
-        decision, details = lch.get_response_from_llm(data)
+        decision, details = langchain_helper.get_response_from_llm(data)
         if decision == "yes" and details:
             event_response = create_event(details['grant_id'], session['calendar'], details['title'], details['start_time'], details['end_time'], details['description'])
             if event_response['status'] == 'success':
