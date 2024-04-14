@@ -199,7 +199,8 @@ def create_event(grant_id, title, start_time, end_time, description):
     }
     try:
         event = nylas.events.create(grant_id, request_body=request_body, query_params=query_params)
-        return {"status": "success", "message": "Event created successfully", "event": event}, 200
+        print("New event created successfully!", event)
+        return {"status": "success", "message": "Event created successfully"}
     except Exception as e:
         print(f"Failed to create event: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
