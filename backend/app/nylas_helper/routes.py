@@ -156,11 +156,13 @@ def create_event(grant_id, calendar_id, title, start_time, end_time, description
         return {"status": "error", "message": str(e)}
     
 # Send an email notification to the user
+sender_email = os.getenv('EMAIL')
 def send_notification_email(grant_id, recipient_email, subject, description):
     email_body = {
         "to": [{"email": recipient_email}],
         "subject": subject,
         "body": description,
+        "from": {"email": sender_email},  
     }
     try:
         message = nylas.messages.send(grant_id, request_body=email_body)
