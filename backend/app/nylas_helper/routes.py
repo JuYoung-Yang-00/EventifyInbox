@@ -105,6 +105,7 @@ def list_events():
 
   
 # WEBHOOK
+
 def verify_nylas_signature(data, signature, webhook_secret):
     expected_signature = hmac.new(webhook_secret.encode(), data, hashlib.sha256).hexdigest()
     is_valid = hmac.compare_digest(expected_signature, signature)
@@ -113,7 +114,7 @@ def verify_nylas_signature(data, signature, webhook_secret):
     print(f"Expected Signature: {expected_signature}")
     print(f"Signature Valid: {is_valid}")
     return is_valid
-
+  
 @nylas_blueprint.route("/webhook", methods=['GET', 'POST'])
 def nylas_webhook():
     if request.method == "GET":
@@ -128,40 +129,42 @@ def nylas_webhook():
 
     signature = request.headers.get('X-Nylas-Signature')
     if not verify_nylas_signature(request.data, signature, webhook_secret):
-        print( f'printing webhook_secre: {webhook_secret}')
         print("Signature verification failed.")
         return "Signature verification failed!", 401
 
     data = request.get_json(silent=True)
     if data:
-      print(f'THIS IS THE WEBHOOK DATA FROM HERE: {data} TO HERE')
-      if is_relevant_to_task:
+      print(f"Webhook data received: {data}")
+      email_data = data.get('data', {}).get('object', {})
+      if is_relevant_to_task(email_data):
         decision, details = langchain_helper.get_response_from_llm(data)
-        if decision == "yes" :
+        if decision == "yes":
           if details:
             event_response = create_event(details['grant_id'], details['title'], details['start_time'], details['end_time'], details['description'])
             if event_response['status'] == 'success':
               email_response = send_notification_email(details['recipient_email'], "[EventifyInbox] New Calendar Event Created", f"A new calendar event has been created based on your recent email titled '{details['subject']}'. Please check your calendar for more details!")
               return jsonify(success=True, email_response=email_response), 200
             else:
-              return "Event creation failed", 200
+              return jsonify({"error": "Event creation failed"}), 500
           else:
-              return "No details", 200
+              return jsonify({"error": "No details provided for event creation"}), 400
         else:
-          return "Decision was no", 200
+          return jsonify({"error": "Decision was no"}), 200
       else:
-        return "Not relevant to task", 200
+        return jsonify({"error": "Not relevant to task"}), 200
 
-# Check if email is relevant to task and webhook is for email received
+# Function to check if email is relevant to task and webhook is for email received
 def is_relevant_to_task(email_data):
     keywords = ["task", "todo", "remind", "schedule", "meeting", "event", "appointment", "deadline", "reminder", "calendar", "plan", "agenda", "assignment", "due"]
-    # Check if the email is marked as sent
-    if 'SENT' in email_data.get('folders', []):
+    folders = email_data.get('folders', [])
+    print(f"Email folders: {folders}")
+
+    if 'SENT' in folders:
         print("Email is sent, not received. Ignoring.")
         return False
+
     subject = email_data.get('subject', "").lower()
     body = email_data.get('body', "").lower()
-    # Check if the subject or body contains task-related keywords
     if any(keyword in subject or keyword in body for keyword in keywords):
         print("Email contains relevant keywords and is considered for further processing.")
         return True
@@ -169,37 +172,87 @@ def is_relevant_to_task(email_data):
     print("Email does not contain relevant keywords.")
     return False
 
+# @nylas_blueprint.route("/webhook", methods=['GET', 'POST'])
+# def nylas_webhook():
+#     if request.method == "GET":
+#         challenge = request.args.get("challenge")
+#         if challenge:
+#             return Response(challenge, mimetype='text/plain')
+
+#     webhook_secret = os.getenv('WEBHOOK_SECRET')
+#     if not webhook_secret:
+#         print("Webhook secret not configured.")
+#         return "Webhook secret not configured.", 500
+
+#     signature = request.headers.get('X-Nylas-Signature')
+#     if not verify_nylas_signature(request.data, signature, webhook_secret):
+#         print( f'printing webhook_secre: {webhook_secret}')
+#         print("Signature verification failed.")
+#         return "Signature verification failed!", 401
+
+#     data = request.get_json(silent=True)
+#     if data:
+#       print(f'THIS IS THE WEBHOOK DATA FROM HERE: {data} TO HERE')
+#       if is_relevant_to_task:
+#         decision, details = langchain_helper.get_response_from_llm(data)
+#         if decision == "yes" :
+#           if details:
+#             event_response = create_event(details['grant_id'], details['title'], details['start_time'], details['end_time'], details['description'])
+#             if event_response['status'] == 'success':
+#               email_response = send_notification_email(details['recipient_email'], "[EventifyInbox] New Calendar Event Created", f"A new calendar event has been created based on your recent email titled '{details['subject']}'. Please check your calendar for more details!")
+#               return jsonify(success=True, email_response=email_response), 200
+#             else:
+#               return "Event creation failed", 200
+#           else:
+#               return "No details", 200
+#         else:
+#           return "Decision was no", 200
+#       else:
+#         return "Not relevant to task", 200
+
+
+# # Check if email is relevant to task and webhook is for email received
+# def is_relevant_to_task(email_data):
+#     keywords = ["task", "todo", "remind", "schedule", "meeting", "event", "appointment", "deadline", "reminder", "calendar", "plan", "agenda", "assignment", "due"]
+#     # Check if the email is marked as sent
+#     if 'SENT' in email_data.get('folders', []):
+#         print("Email is sent, not received. Ignoring.")
+#         return False
+#     subject = email_data.get('subject', "").lower()
+#     body = email_data.get('body', "").lower()
+#     # Check if the subject or body contains task-related keywords
+#     if any(keyword in subject or keyword in body for keyword in keywords):
+#         print("Email contains relevant keywords and is considered for further processing.")
+#         return True
+
+#     print("Email does not contain relevant keywords.")
+#     return False
+
   
   
 # Create event on the primary calendar based on llm's response
 def create_event(grant_id, title, start_time, end_time, description):
-    # Retrieve the user's primary calendar ID from MongoDB
     user = current_app.db.users.find_one({'grant_id': grant_id})
     if not user or 'primary_calendar_id' not in user:
         print(f"No primary calendar found for grant_id: {grant_id}")
         return jsonify({"status": "error", "message": "No primary calendar found"}), 404
 
     calendar_id = user['primary_calendar_id']
-
     try:
-        # Instantiate the Nylas client
-        nylas = Client(
-            client_id=current_app.config['NYLAS_CLIENT_ID'],
-            client_secret=current_app.config['NYLAS_CLIENT_SECRET'],
-            access_token=grant_id  # Using the access token obtained during authentication
-        )
-
-        # Create an event
-        event = nylas.events.create(
-            calendar_id=calendar_id,
-            title=title,
-            when={"start_time": start_time, "end_time": end_time},
-            description=description
-        )
+        event = nylas.events.create({
+            "calendar_id": calendar_id,
+            "title": title,
+            "when": {
+                "start_time": start_time,
+                "end_time": end_time
+            },
+            "description": description
+        })
         return jsonify({"status": "success", "message": "Event created successfully", "event": event}), 200
     except Exception as e:
         print(f"Failed to create event: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
       
     
 # Send an email notification to the user
