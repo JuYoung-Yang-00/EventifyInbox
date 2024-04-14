@@ -139,15 +139,15 @@ def nylas_webhook():
       if is_relevant_to_task(email_data):
         decision, details = langchain_helper.get_response_from_llm(data)
         if decision == "yes":
-          if details:
             event_response = create_event(details['grant_id'], details['title'], details['start_time'], details['end_time'], details['description'])
-            if event_response[0] == 'success':
-              email_response = send_notification_email(details['recipient_email'], "[EventifyInbox] New Calendar Event Created", f"A new calendar event has been created based on your recent email titled '{details['subject']}'. Please check your calendar for more details!")
-              return jsonify(success=True, email_response=email_response), 200
-            else:
-              return "Event creation failed", 200
-          else:
-              return "No details provided for event creation", 200
+            # if event_response[0] == 'success':
+            email_response = send_notification_email(details['recipient_email'], "[EventifyInbox] New Calendar Event Created", f"A new calendar event has been created based on your recent email titled '{details['subject']}'. Please check your calendar for more details!")
+            print("Event created and notification email sent!!")
+            return jsonify(success=True, event_response=event_response, email_response=email_response), 200
+            # else:
+            #   return "Event creation failed", 200
+          # else:
+          #     return "No details provided for event creation", 200
         else:
           return "Decision was no", 200
       else:
