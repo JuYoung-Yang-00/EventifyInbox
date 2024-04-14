@@ -139,7 +139,7 @@ def nylas_webhook():
       if is_relevant_to_task(email_data):
         decision, details = langchain_helper.get_response_from_llm(data)
         if decision == "yes":
-            event_response = create_event(details['grant_id'], details['title'], details['start_time'], details['end_time'], details['description'], details['recipient_email'])
+            event_response = create_event(details['grant_id'], details['title'], details['start_time'], details['end_time'], details['description'])
             # if event_response[0] == 'success':
             print("event-response function called!!!!")
             email_response = send_notification_email(details['recipient_email'], "[EventifyInbox] New Calendar Event Created", f"A new calendar event has been created based on your recent email regarding '{details['description']}'. Please check your calendar for more details!")
@@ -176,7 +176,7 @@ def is_relevant_to_task(email_data):
   
   
 # Create event on the primary calendar based on llm's response
-def create_event(grant_id, title, start_time, end_time, description, recipient_email):
+def create_event(grant_id, title, start_time, end_time, description):
     user = current_app.db.users.find_one({'grant_id': grant_id})
     if not user or 'primary_calendar_id' not in user:
         print(f"No primary calendar found for grant_id: {grant_id}")
@@ -184,22 +184,14 @@ def create_event(grant_id, title, start_time, end_time, description, recipient_e
 
     calendar_id = user['primary_calendar_id']
     print(f"Creating event on calendar: {calendar_id}")
-    # admin_grant_id = os.getenv("NYLAS_GRANT_ID") 
     request_body = {
         "title": title,
         "when": {
-            "start_time": 1648003200,
-            "end_time": 1648006800
+            "start_time": int(start_time),
+            "end_time": int(end_time),
         },
         "description": description,
-        "participants":[
-          {
-            "name": recipient_email,
-            "email": recipient_email,
-          }
-        ]
     }
-    # Prepare the query parameters, if any
     query_params = {
         "calendar_id": calendar_id
     }
