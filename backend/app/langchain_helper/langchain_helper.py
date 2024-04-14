@@ -42,7 +42,7 @@ def get_response_from_llm(webhook_data):
         Email Content: \n${parsed_email_content}\n
         If a calendar event should be created, provide "yes" followed by event details such as title, start time, end time, and a brief description.
         Provide event details in the following format: [title, start_time, end_time, description]
-        Be sure to give the start_time and end_time in unix time. Make sure to calculate the correct unix time based on PST. (Remember, start_time and end_time cannot be in the past.)
+        Make sure you accurately calculate the time requested for the event. Get the exact year, month, day, and time decribed from the email. Getting the correc unix time is very important.
         If no event should be created, respond with "no".
         If you are not sure whether to create an event or about the event details, response with "no".
         So, your answer should be either: "yes, [title, start_time, end_time, description]" or "no".
