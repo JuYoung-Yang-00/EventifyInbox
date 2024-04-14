@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for, session, jsonify, Response
+from flask import Blueprint, request, redirect, session, jsonify, Response
 from nylas import Client
 from config import Config
 from nylas.models.auth import URLForAuthenticationConfig
@@ -6,8 +6,7 @@ from nylas.models.auth import CodeExchangeRequest
 import os
 import hashlib
 import hmac
-import json 
-
+# import langchain_helper as lch
 
 nylas_blueprint = Blueprint('nylas', __name__)
 
@@ -90,8 +89,6 @@ def list_events():
   
 # WEBHOOK
 def verify_nylas_signature(data, signature, webhook_secret):
-    import hmac
-    import hashlib
     expected_signature = hmac.new(webhook_secret.encode(), data, hashlib.sha256).hexdigest()
     is_valid = hmac.compare_digest(expected_signature, signature)
     print(f"Data: {data}")
@@ -99,7 +96,6 @@ def verify_nylas_signature(data, signature, webhook_secret):
     print(f"Expected Signature: {expected_signature}")
     print(f"Signature Valid: {is_valid}")
     return is_valid
-
 
 
 @nylas_blueprint.route("/webhook", methods=['GET', 'POST'])
@@ -110,36 +106,47 @@ def nylas_webhook():
             return Response(challenge, mimetype='text/plain')
 
     webhook_secret = os.getenv('WEBHOOK_SECRET')
-    if not webhook_secret:
-        print("Webhook secret not configured.")
-        return "Webhook secret not configured.", 500
-
     signature = request.headers.get('X-Nylas-Signature')
     if not verify_nylas_signature(request.data, signature, webhook_secret):
-        print( f'printing webhook_secre: {webhook_secret}')
         print("Signature verification failed.")
         return "Signature verification failed!", 401
 
     data = request.get_json(silent=True)
     if data:
-        send_notification_email(data) 
+        # Pipeline to:
+        #   1. check if email is relevant to task
+        #   2. if relevant, send to lanachain (llm)
+        #   3. if llm decides to create new calendar event, send email notification to user
+        # if is_relevant_to_task(data):
+        #   lch.get_response_from_llm(data)
         print("Valid data received:", data)
+        print("Data Ends HERE")
         return jsonify(success=True), 200
     else:
         print("Invalid JSON data.")
         return "Invalid JSON data", 400
 
 
+# Check if email is relevant to task
+def is_relevant_to_task(data):
+    keywords = ["task", "todo", "remind", "schedule", "meeting", "event", "appointment", "deadline", "reminder", "calendar", "plan", "agenda", "assignment", "due"]
+    content = data.get("subject", "") + " " + data.get("body", "")
+    return any(keyword in content.lower() for keyword in keywords)
 
 
 
-# Function to send an email notification with the webhook data
+# Create event on the primary calendar based on llm's response
+# def create_event():
+  
+  
+# Send an email notification to the user
 def send_notification_email(data):
+    title = data["subject"]
     grant_id = os.getenv("NYLAS_GRANT_ID")  
     email_body = {
-        "to": [{"email": "toolbox.jyy@gmail.com"}],  
-        "subject": "New Email Received via Webhook",
-        "body": f"Received new email data: {json.dumps(data)}", 
+        "to": [{"email": "recipiant email address here"}],  
+        "subject": "[EventifyInbox] New Calendar Event Created",
+        "body": f"A new calendar even has been created based on your recent email titled {title}. Please check your calendar for more details!", 
     }
     try:
         message = nylas.messages.send(grant_id, request_body=email_body)
