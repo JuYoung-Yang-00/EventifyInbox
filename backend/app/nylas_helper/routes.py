@@ -172,62 +172,6 @@ def is_relevant_to_task(email_data):
     print("Email does not contain relevant keywords.")
     return False
 
-# @nylas_blueprint.route("/webhook", methods=['GET', 'POST'])
-# def nylas_webhook():
-#     if request.method == "GET":
-#         challenge = request.args.get("challenge")
-#         if challenge:
-#             return Response(challenge, mimetype='text/plain')
-
-#     webhook_secret = os.getenv('WEBHOOK_SECRET')
-#     if not webhook_secret:
-#         print("Webhook secret not configured.")
-#         return "Webhook secret not configured.", 500
-
-#     signature = request.headers.get('X-Nylas-Signature')
-#     if not verify_nylas_signature(request.data, signature, webhook_secret):
-#         print( f'printing webhook_secre: {webhook_secret}')
-#         print("Signature verification failed.")
-#         return "Signature verification failed!", 401
-
-#     data = request.get_json(silent=True)
-#     if data:
-#       print(f'THIS IS THE WEBHOOK DATA FROM HERE: {data} TO HERE')
-#       if is_relevant_to_task:
-#         decision, details = langchain_helper.get_response_from_llm(data)
-#         if decision == "yes" :
-#           if details:
-#             event_response = create_event(details['grant_id'], details['title'], details['start_time'], details['end_time'], details['description'])
-#             if event_response['status'] == 'success':
-#               email_response = send_notification_email(details['recipient_email'], "[EventifyInbox] New Calendar Event Created", f"A new calendar event has been created based on your recent email titled '{details['subject']}'. Please check your calendar for more details!")
-#               return jsonify(success=True, email_response=email_response), 200
-#             else:
-#               return "Event creation failed", 200
-#           else:
-#               return "No details", 200
-#         else:
-#           return "Decision was no", 200
-#       else:
-#         return "Not relevant to task", 200
-
-
-# # Check if email is relevant to task and webhook is for email received
-# def is_relevant_to_task(email_data):
-#     keywords = ["task", "todo", "remind", "schedule", "meeting", "event", "appointment", "deadline", "reminder", "calendar", "plan", "agenda", "assignment", "due"]
-#     # Check if the email is marked as sent
-#     if 'SENT' in email_data.get('folders', []):
-#         print("Email is sent, not received. Ignoring.")
-#         return False
-#     subject = email_data.get('subject', "").lower()
-#     body = email_data.get('body', "").lower()
-#     # Check if the subject or body contains task-related keywords
-#     if any(keyword in subject or keyword in body for keyword in keywords):
-#         print("Email contains relevant keywords and is considered for further processing.")
-#         return True
-
-#     print("Email does not contain relevant keywords.")
-#     return False
-
   
   
 # Create event on the primary calendar based on llm's response
@@ -238,21 +182,21 @@ def create_event(grant_id, title, start_time, end_time, description):
         return jsonify({"status": "error", "message": "No primary calendar found"}), 404
 
     calendar_id = user['primary_calendar_id']
+    print(f"Creating event on calendar: {calendar_id}")
     admin_grant_id = os.getenv("NYLAS_GRANT_ID") 
+    request_body = {
+        "title": title,
+        "when": {
+            "start_time": int(start_time),
+            "end_time": int(end_time)
+        },
+        "description": description
+    }
+    # Prepare the query parameters, if any
+    query_params = {
+        "calendar_id": calendar_id
+    }
     try:
-        # Set up the request body for creating the event
-        request_body = {
-            "title": title,
-            "when": {
-                "start_time": int(start_time),
-                "end_time": int(end_time)
-            },
-            "description": description
-        }
-        # Prepare the query parameters, if any
-        query_params = {
-            "calendar_id": calendar_id
-        }
         event = nylas.events.create(admin_grant_id, request_body=request_body, query_params=query_params)
         return {"status": "success", "message": "Event created successfully", "event": event}, 200
     except Exception as e:
