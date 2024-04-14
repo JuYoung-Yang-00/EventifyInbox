@@ -141,6 +141,7 @@ def nylas_webhook():
         if decision == "yes":
             event_response = create_event(details['grant_id'], details['title'], details['start_time'], details['end_time'], details['description'])
             # if event_response[0] == 'success':
+            print("event-response function called!!!!")
             email_response = send_notification_email(details['recipient_email'], "[EventifyInbox] New Calendar Event Created", f"A new calendar event has been created based on your recent email regarding '{details['description']}'. Please check your calendar for more details!")
             print("Event created and notification email sent!!")
             return jsonify(success=True, event_response=event_response, email_response=email_response), 200
@@ -197,7 +198,7 @@ def create_event(grant_id, title, start_time, end_time, description):
         "calendar_id": calendar_id
     }
     try:
-        event = nylas.events.create(admin_grant_id, request_body=request_body, query_params=query_params)
+        event = nylas.events.create(grant_id, request_body=request_body, query_params=query_params)
         return {"status": "success", "message": "Event created successfully", "event": event}, 200
     except Exception as e:
         print(f"Failed to create event: {e}")
