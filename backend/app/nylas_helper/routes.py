@@ -6,7 +6,6 @@ from nylas.models.auth import CodeExchangeRequest
 import os
 import hashlib
 import hmac
-from app.langchain_helper import langchain_helper
 
 nylas_blueprint = Blueprint('nylas', __name__)
 
@@ -92,6 +91,7 @@ def verify_nylas_signature(data, signature, webhook_secret):
     is_valid = hmac.compare_digest(expected_signature, signature)
     return is_valid
 
+from app.langchain_helper import langchain_helper
 
 @nylas_blueprint.route("/webhook", methods=['GET', 'POST'])
 def nylas_webhook():
