@@ -241,7 +241,6 @@ def create_event(grant_id, title, start_time, end_time, description):
     try:
         # Set up the request body for creating the event
         request_body = {
-            "calendar_id": calendar_id,
             "title": title,
             "when": {
                 "start_time": int(start_time),
