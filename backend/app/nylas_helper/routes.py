@@ -244,8 +244,8 @@ def create_event(grant_id, title, start_time, end_time, description):
             "calendar_id": calendar_id,
             "title": title,
             "when": {
-                "start_time": start_time,
-                "end_time": end_time
+                "start_time": int(start_time),
+                "end_time": int(end_time)
             },
             "description": description
         }
