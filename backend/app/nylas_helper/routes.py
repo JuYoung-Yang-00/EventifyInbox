@@ -1,8 +1,9 @@
 from flask import Blueprint, request, redirect, session, jsonify, Response
-from nylas import Client, AuthenticationError
+from nylas import Client
 from config import Config
 from nylas.models.auth import URLForAuthenticationConfig
 from nylas.models.auth import CodeExchangeRequest
+
 import os
 import hashlib
 import hmac
@@ -47,11 +48,8 @@ def authorized():
                 {'$set': {'grant_id': session["grant_id"]}},
                 upsert=True
             )
-    except AuthenticationError as e:
-        current_app.logger.error(f"Authentication Error: {str(e)}")
-        return "Authentication Failed", 401
     except Exception as e:
-        current_app.logger.error(f"An error occurred: {str(e)}")
+        current_app.logger.error(f"An error occurred during authentication: {str(e)}")
         return "An Internal Error Occurred", 500
 
     return redirect("https://eventifyinbox.com?nylasConnected=true")
