@@ -18,7 +18,8 @@ def create_app():
     # MongoDB Connection
     try:
         password = application.config['MONGODB_PASSWORD']
-        mongo_uri = f"mongodb+srv://juyoungyang00:{password}@cluster0.1hvpjjc.mongodb.net/"
+        # mongo_uri = f"mongodb+srv://juyoungyang00:{password}@cluster0.1hvpjjc.mongodb.net/"
+        mongo_uri= f"mongodb+srv://juyoungyang00:{password}@cluster0.1hvpjjc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
         client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)  # 5 second timeout
         client.server_info()  # Forces a call to check if connected.
         application.db = client.eventifyinbox
