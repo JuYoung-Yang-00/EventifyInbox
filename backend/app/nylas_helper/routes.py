@@ -253,7 +253,7 @@ def create_event(grant_id, title, start_time, end_time, description):
         query_params = {
             "calendar_id": calendar_id
         }
-        event = nylas.events.create(request_body=request_body, query_params=query_params)
+        event = nylas.events.create(grant_id, request_body=request_body, query_params=query_params)
         return {"status": "success", "message": "Event created successfully", "event": event}
     except Exception as e:
         print(f"Failed to create event: {e}")
