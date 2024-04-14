@@ -238,8 +238,10 @@ def create_event(grant_id, title, start_time, end_time, description):
         return jsonify({"status": "error", "message": "No primary calendar found"}), 404
 
     calendar_id = user['primary_calendar_id']
+
     try:
-        # Set up the request body for creating the event
+        nylas = Client(api_key=current_app.config['NYLAS_API_KEY'], access_token=grant_id)
+
         request_body = {
             "calendar_id": calendar_id,
             "title": title,
@@ -249,12 +251,9 @@ def create_event(grant_id, title, start_time, end_time, description):
             },
             "description": description
         }
-        # Prepare the query parameters, if any
-        query_params = {
-            "calendar_id": calendar_id
-        }
-        event = nylas.events.create(grant_id, request_body=request_body, query_params=query_params)
-        return {"status": "success", "message": "Event created successfully", "event": event}
+
+        event = nylas.events.create(**request_body)
+        return jsonify({"status": "success", "message": "Event created successfully", "event": event}), 200
     except Exception as e:
         print(f"Failed to create event: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
