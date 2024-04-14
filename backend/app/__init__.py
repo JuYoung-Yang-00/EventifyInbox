@@ -13,7 +13,6 @@ def create_app():
     
     
     Session(application)
-    # CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
     CORS(application, supports_credentials=True)
     @application.route("/")
     def home():
@@ -25,9 +24,6 @@ def create_app():
         </head>
         <body>
             <h1>Welcome to Backend for Eventify Inbox!</h1>
-            <form action="/nylas">
-                <input type="submit" value="Connect to Nylas" />
-            </form>
         </body>
         </html>
         """)
