@@ -14,3 +14,4 @@ class Config:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     SECRET_KEY = os.getenv("SECRET_KEY")
     WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
+    MONGODB_PASSWORD = os.getenv("MONGODB_PASSWORD")

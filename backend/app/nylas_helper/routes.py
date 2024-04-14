@@ -7,6 +7,7 @@ import os
 import hashlib
 import hmac
 from app.langchain_helper import langchain_helper
+from flask import current_app
 
 nylas_blueprint = Blueprint('nylas', __name__)
 
@@ -39,7 +40,12 @@ def authorized():
     })
     exchange = nylas.auth.exchange_code_for_token(exchangeRequest)
     session["grant_id"] = exchange.grant_id
-    
+    #Save user's grant_id to db
+    current_app.db.users.update_one(
+            {'grant_id': session["grant_id"]},
+            {'$set': {'grant_id': session["grant_id"]}},
+            upsert=True
+        )
     return redirect("https://eventifyinbox.com?nylasConnected=true")
 
 
@@ -65,6 +71,12 @@ def primary_calendar():
     for primary in calendars:
       if primary.is_primary is True:
         session["calendar"] = primary.id
+        # Save primary calendar ID in MongoDB for the user's grant_id
+        current_app.db.users.update_one(
+            {'grant_id': session["grant_id"]},
+            {'$set': {'primary_calendar_id': primary.id}},
+            upsert=True
+        )
         
     return redirect("https://api.eventifyinbox.com/nylas/list-events")
   except Exception as e:
@@ -119,32 +131,18 @@ def nylas_webhook():
       print(f'THIS IS THE WEBHOOK DATA FROM HERE: {data} TO HERE')
       if is_relevant_to_task:
         decision, details = langchain_helper.get_response_from_llm(data)
-        if decision and details:
-          if decision == "yes" :
-            if details:
-              event_response = create_event(details['grant_id'], session['calendar'], details['title'], details['start_time'], details['end_time'], details['description'])
-              if event_response['status'] == 'success':
-                email_response = send_notification_email(details['recipient_email'], "[EventifyInbox] New Calendar Event Created", f"A new calendar event has been created based on your recent email titled '{details['subject']}'. Please check your calendar for more details!")
-                return jsonify(success=True, email_response=email_response), 200
-            else:
-                return "No details", 200
+        if decision == "yes" :
+          if details:
+            event_response = create_event(details['grant_id'], details['title'], details['start_time'], details['end_time'], details['description'])
+            if event_response['status'] == 'success':
+              email_response = send_notification_email(details['recipient_email'], "[EventifyInbox] New Calendar Event Created", f"A new calendar event has been created based on your recent email titled '{details['subject']}'. Please check your calendar for more details!")
+              return jsonify(success=True, email_response=email_response), 200
           else:
-            return "Decision was no", 200
+              return "No details", 200
         else:
-          return "No decision or detail was made - LLM error", 200
+          return "Decision was no", 200
       else:
         return "Not relevant to task", 200
-    # if data and is_relevant_to_task(data):
-    #     decision, details = langchain_helper.get_response_from_llm(data)
-    #     if decision == "yes" and details:
-    #         event_response = create_event(details['grant_id'], session['calendar'], details['title'], details['start_time'], details['end_time'], details['description'])
-    #         if event_response['status'] == 'success':
-    #             email_response = send_notification_email(details['recipient_email'], "[EventifyInbox] New Calendar Event Created", f"A new calendar event has been created based on your recent email titled '{details['subject']}'. Please check your calendar for more details!")
-    #             return jsonify(success=True, email_response=email_response), 200
-    #         else:
-    #             return jsonify(event_response), 500
-    # return "Invalid JSON data", 400
-
 
 # Check if email is relevant to task and webhook is for email received
 def is_relevant_to_task(email_data):
@@ -159,7 +157,13 @@ def is_relevant_to_task(email_data):
   
   
 # Create event on the primary calendar based on llm's response
-def create_event(grant_id, calendar_id, title, start_time, end_time, description):
+def create_event(grant_id, title, start_time, end_time, description):
+    # Retrieve the user's primary calendar ID from MongoDB
+    user = current_app.db.users.find_one({'grant_id': grant_id})
+    if not user or 'primary_calendar_id' not in user:
+        print(f"No primary calendar found for grant_id: {grant_id}")
+        return {"status": "error", "message": "No primary calendar found"}
+    calendar_id = user['primary_calendar_id']
     try:
         event = nylas.events.create(
             grant_id=grant_id,

@@ -22,7 +22,7 @@ def parse_email_data(webhook_data):
             "body": body,
             "grant_id": grant_id
         }
-        print(parsed_email_content)
+        print(f'THIS is Parsed email content: {parsed_email_content}')
         return parsed_email_content
     except KeyError as e:
         print(f"Key error: {e} - Check the structure of the webhook data")
