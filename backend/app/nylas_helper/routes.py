@@ -145,13 +145,13 @@ def nylas_webhook():
               email_response = send_notification_email(details['recipient_email'], "[EventifyInbox] New Calendar Event Created", f"A new calendar event has been created based on your recent email titled '{details['subject']}'. Please check your calendar for more details!")
               return jsonify(success=True, email_response=email_response), 200
             else:
-              return jsonify({"error": "Event creation failed"}), 500
+              return "Event creation failed", 200
           else:
-              return jsonify({"error": "No details provided for event creation"}), 400
+              return "No details provided for event creation", 200
         else:
-          return jsonify({"error": "Decision was no"}), 200
+          return "Decision was no", 200
       else:
-        return jsonify({"error": "Not relevant to task"}), 200
+        return "Not relevant to task", 200
 
 # Function to check if email is relevant to task and webhook is for email received
 def is_relevant_to_task(email_data):
@@ -239,7 +239,8 @@ def create_event(grant_id, title, start_time, end_time, description):
 
     calendar_id = user['primary_calendar_id']
     try:
-        event = nylas.events.create({
+        # Set up the request body for creating the event
+        request_body = {
             "calendar_id": calendar_id,
             "title": title,
             "when": {
@@ -247,7 +248,12 @@ def create_event(grant_id, title, start_time, end_time, description):
                 "end_time": end_time
             },
             "description": description
-        })
+        }
+        # Prepare the query parameters, if any
+        query_params = {
+            "calendar_id": calendar_id
+        }
+        event = nylas.events.create(request_body=request_body, query_params=query_params)
         return jsonify({"status": "success", "message": "Event created successfully", "event": event}), 200
     except Exception as e:
         print(f"Failed to create event: {e}")
