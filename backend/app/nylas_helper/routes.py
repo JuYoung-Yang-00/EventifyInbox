@@ -185,30 +185,47 @@ def create_event(grant_id, title, start_time, end_time, description):
     calendar_id = user['primary_calendar_id']
     print(f"Creating event on calendar: {calendar_id}")
     admin_grant_id = os.getenv("NYLAS_GRANT_ID") 
-    request_body = {
-        "title": title,
-        "when": {
+    try:
+      events = nylas.events.create(
+        grant_id,
+        request_body={
+          "title": 'title',
+          "when": {
             "start_time": 1648003200,
             "end_time": 1648006800
+          },
         },
-        "description": description
-    }
-    # Prepare the query parameters, if any
-    query_params = {
-        "calendar_id": calendar_id
-    }
-    try:
-        event = nylas.events.create(grant_id, request_body=request_body, query_params=query_params)
-        print("New event created successfully!", event)
-        return {"status": "success", "message": "Event created successfully"}
+        query_params={
+          "calendar_id": calendar_id
+        }
+      )
+      return events
+      # return {"status": "success", "message": "Event created successfully"}
     except Exception as e:
-        print(f"Failed to create event: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-      
+      print(f"Failed to create event: {e}")
+      return jsonify({"status": "error", "message": str(e)}), 500
     
+    # request_body = {
+    #     "title": title,
+    #     "when": {
+    #         "start_time": 1648003200,
+    #         "end_time": 1648006800
+    #     },
+    #     "description": description
+    # }
+    # # Prepare the query parameters, if any
+    # query_params = {
+    #     "calendar_id": calendar_id
+    # }
+    # try:
+    #     event = nylas.events.create(grant_id, request_body=request_body, query_params=query_params)
+    #     print("New event created successfully!", event)
+    #     return {"status": "success", "message": "Event created successfully"}
+    # except Exception as e:
+    #     print(f"Failed to create event: {e}")
+    #     return jsonify({"status": "error", "message": str(e)}), 500
+
 # Send an email notification to the user
-# sender_email = os.getenv('EMAIL')
 def send_notification_email(recipient_email, subject, description):
     grant_id = os.getenv("NYLAS_GRANT_ID") 
     email_body = {
