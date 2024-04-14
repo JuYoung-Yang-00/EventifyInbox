@@ -22,6 +22,7 @@ def parse_email_data(webhook_data):
             "body": body,
             "grant_id": grant_id
         }
+        print(parsed_email_content)
         return parsed_email_content
     except KeyError as e:
         print(f"Key error: {e} - Check the structure of the webhook data")
@@ -33,7 +34,7 @@ def parse_email_data(webhook_data):
 def get_response_from_llm(webhook_data):
     parsed_email_content = parse_email_data(webhook_data)
     
-    llm = OpenAI(model="gpt-3.5-turbo-instruct", openai_api_key=openai_api_key)
+    llm = OpenAI(model="gpt-3.5-turbo-1106", openai_api_key=openai_api_key)
     prompt_template = PromptTemplate(
         input_variables=["parsed_email_content"],
         template="""
@@ -51,8 +52,13 @@ def get_response_from_llm(webhook_data):
     chain = LLMChain(llm=llm, prompt=prompt_template, output_key="answer")
     response = chain.invoke({"parsed_email_content": parsed_email_content})
     
+    print (f'LLM response: {response["answer"]}')
+    
     if "yes" in response["answer"].lower():
         details = parse_event_details(response["answer"], parsed_email_content["grant_id"])
+        
+        print(f'Details from LLM response: {details}')
+        
         return "yes", details
     else:
         return "no", {}
