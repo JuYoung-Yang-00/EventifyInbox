@@ -159,6 +159,7 @@ def is_relevant_to_task(email_data):
         body = email_data.get('body', "").lower()
         # Check if the subject or body contains task-related keywords
         return any(keyword in subject or keyword in body for keyword in keywords)
+    print("Email is sent, not received!")
     return False
   
   
@@ -170,25 +171,28 @@ def create_event(grant_id, title, start_time, end_time, description):
         print(f"No primary calendar found for grant_id: {grant_id}")
         return {"status": "error", "message": "No primary calendar found"}
     calendar_id = user['primary_calendar_id']
+
     try:
-        event = nylas.events.create(
-            grant_id=grant_id,
-            request_body={
-                "title": title,
-                "when": {
-                    "start_time": start_time,
-                    "end_time": end_time
-                },
-                "description": description
-            },
-            query_params={
-                "calendar_id": calendar_id
-            }
+        # Setting up the Nylas client with the correct access token
+        nylas = Client(
+            api_key=Config.NYLAS_API_KEY,
+            access_token=grant_id  # This should be set with the access token
         )
+
+        event = nylas.events.create({
+            "calendar_id": calendar_id,
+            "title": title,
+            "when": {
+                "start_time": start_time,
+                "end_time": end_time
+            },
+            "description": description
+        })
         return {"status": "success", "message": "Event created successfully", "event": event}
     except Exception as e:
         print(f"Failed to create event: {e}")
         return {"status": "error", "message": str(e)}
+      
     
 # Send an email notification to the user
 # sender_email = os.getenv('EMAIL')
