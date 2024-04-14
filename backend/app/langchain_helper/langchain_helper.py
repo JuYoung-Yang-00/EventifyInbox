@@ -34,7 +34,8 @@ def parse_email_data(webhook_data):
 def get_response_from_llm(webhook_data):
     parsed_email_content = parse_email_data(webhook_data)
     
-    llm = ChatOpenAI(model="gpt-3.5-turbo-1106", openai_api_key=openai_api_key)
+    # llm = ChatOpenAI(model="gpt-3.5-turbo-1106", openai_api_key=openai_api_key)
+    llm = ChatOpenAI(model="gpt-4-turbo-preview", openai_api_key=openai_api_key)
     prompt_template = PromptTemplate(
         input_variables=["parsed_email_content"],
         template="""
