@@ -55,7 +55,7 @@ def get_response_from_llm(webhook_data):
     print (f'LLM response: {response["answer"]}')
     
     if "yes" in response["answer"].lower():
-        details = parse_event_details(response["answer"], parsed_email_content["grant_id"])
+        details = parse_event_details(response["answer"], parsed_email_content["grant_id"], parsed_email_content["recipient_email"])
         
         print(f'Details from LLM response: {details}')
         
@@ -64,7 +64,7 @@ def get_response_from_llm(webhook_data):
         return "no", {}
 
 
-def parse_event_details(llm_response, grant_id):
+def parse_event_details(llm_response, grant_id, recipient_email):
     pattern = r"\[(.*?), (.*?), (.*?), (.*?)\]"
     match = re.search(pattern, llm_response)
     
@@ -74,7 +74,8 @@ def parse_event_details(llm_response, grant_id):
             "start_time": match.group(2).strip(),
             "end_time": match.group(3).strip(),
             "description": match.group(4).strip(),
-            "grant_id": grant_id 
+            "grant_id": grant_id,
+            "recipient_email": recipient_email
         }
         return details
     else:
