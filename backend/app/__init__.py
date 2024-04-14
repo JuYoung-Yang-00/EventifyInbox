@@ -5,8 +5,7 @@ from .nylas_helper.routes import nylas_blueprint
 
 from flask import render_template_string
 from flask_cors import CORS
-from pymongo import MongoClient
-import os
+from pymongo import MongoClient, errors
 
 def create_app():
     application = Flask(__name__)
@@ -16,10 +15,18 @@ def create_app():
     Session(application)
     CORS(application, supports_credentials=True)
     
-    mongo_uri = f"mongodb+srv://juyoungyang00:{application.config['MONGODB_PASSWORD']}@cluster0.1hvpjjc.mongodb.net/"
-
-    client = MongoClient(mongo_uri)
-    application.db = client.eventifyinbox
+    # MongoDB Connection
+    try:
+        password = application.config['MONGODB_PASSWORD']
+        mongo_uri = f"mongodb+srv://juyoungyang00:{password}@cluster0.1hvpjjc.mongodb.net/"
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)  # 5 second timeout
+        client.server_info()  # Forces a call to check if connected.
+        application.db = client.eventifyinbox
+        print("MongoDB is connected successfully.")
+    except errors.ServerSelectionTimeoutError as err:
+        # Handle errors if MongoDB is unreachable
+        print("Failed to connect to MongoDB:", err)
+        raise ConnectionError("Database connection failed.")
     
     @application.route("/")
     def home():

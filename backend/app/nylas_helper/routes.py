@@ -1,5 +1,5 @@
 from flask import Blueprint, request, redirect, session, jsonify, Response
-from nylas import Client
+from nylas import Client, AuthenticationError
 from config import Config
 from nylas.models.auth import URLForAuthenticationConfig
 from nylas.models.auth import CodeExchangeRequest
@@ -29,23 +29,31 @@ def login():
   else:
     return redirect("https://eventifyinbox.com?nylasConnected=true")
 
+
 @nylas_blueprint.route("/callback", methods=["GET"])
 def authorized():
-  if session.get("grant_id") is None:
-    code = request.args.get("code")
-    exchangeRequest = CodeExchangeRequest({
-      "redirect_uri": "https://api.eventifyinbox.com/nylas/callback",
-      "code": code,
-      "client_id": Config.NYLAS_CLIENT_ID
-    })
-    exchange = nylas.auth.exchange_code_for_token(exchangeRequest)
-    session["grant_id"] = exchange.grant_id
-    #Save user's grant_id to db
-    current_app.db.users.update_one(
-            {'grant_id': session["grant_id"]},
-            {'$set': {'grant_id': session["grant_id"]}},
-            upsert=True
-        )
+    try:
+        if session.get("grant_id") is None:
+            code = request.args.get("code")
+            exchangeRequest = CodeExchangeRequest({
+                "redirect_uri": "https://api.eventifyinbox.com/nylas/callback",
+                "code": code,
+                "client_id": Config.NYLAS_CLIENT_ID
+            })
+            exchange = nylas.auth.exchange_code_for_token(exchangeRequest)
+            session["grant_id"] = exchange.grant_id
+            current_app.db.users.update_one(
+                {'grant_id': session["grant_id"]},
+                {'$set': {'grant_id': session["grant_id"]}},
+                upsert=True
+            )
+    except AuthenticationError as e:
+        current_app.logger.error(f"Authentication Error: {str(e)}")
+        return "Authentication Failed", 401
+    except Exception as e:
+        current_app.logger.error(f"An error occurred: {str(e)}")
+        return "An Internal Error Occurred", 500
+
     return redirect("https://eventifyinbox.com?nylasConnected=true")
 
 
