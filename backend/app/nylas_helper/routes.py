@@ -115,16 +115,32 @@ def nylas_webhook():
         return "Signature verification failed!", 401
 
     data = request.get_json(silent=True)
-    if data and is_relevant_to_task(data):
+    if data:
+      print(f'THIS IS THE WEBHOOK DATA FROM HERE: {data} TO HERE')
+      if is_relevant_to_task:
         decision, details = langchain_helper.get_response_from_llm(data)
-        if decision == "yes" and details:
+        if decision == "yes" :
+          if details:
             event_response = create_event(details['grant_id'], session['calendar'], details['title'], details['start_time'], details['end_time'], details['description'])
             if event_response['status'] == 'success':
-                email_response = send_notification_email(details['recipient_email'], "[EventifyInbox] New Calendar Event Created", f"A new calendar event has been created based on your recent email titled '{details['subject']}'. Please check your calendar for more details!")
-                return jsonify(success=True, email_response=email_response), 200
-            else:
-                return jsonify(event_response), 500
-    return "Invalid JSON data", 400
+              email_response = send_notification_email(details['recipient_email'], "[EventifyInbox] New Calendar Event Created", f"A new calendar event has been created based on your recent email titled '{details['subject']}'. Please check your calendar for more details!")
+              return jsonify(success=True, email_response=email_response), 200
+          else:
+              return "No details", 200
+        else:
+          return "Decision was no", 200
+      else:
+        return "Not relevant to task", 200
+    # if data and is_relevant_to_task(data):
+    #     decision, details = langchain_helper.get_response_from_llm(data)
+    #     if decision == "yes" and details:
+    #         event_response = create_event(details['grant_id'], session['calendar'], details['title'], details['start_time'], details['end_time'], details['description'])
+    #         if event_response['status'] == 'success':
+    #             email_response = send_notification_email(details['recipient_email'], "[EventifyInbox] New Calendar Event Created", f"A new calendar event has been created based on your recent email titled '{details['subject']}'. Please check your calendar for more details!")
+    #             return jsonify(success=True, email_response=email_response), 200
+    #         else:
+    #             return jsonify(event_response), 500
+    # return "Invalid JSON data", 400
 
 
 # Check if email is relevant to task and webhook is for email received
@@ -158,6 +174,7 @@ def create_event(grant_id, calendar_id, title, start_time, end_time, description
         )
         return {"status": "success", "message": "Event created successfully", "event": event}
     except Exception as e:
+        print(f"Failed to create event: {e}")
         return {"status": "error", "message": str(e)}
     
 # Send an email notification to the user
